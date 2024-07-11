@@ -1,2 +1,2 @@
-# korge-kproject-template
-Template repository with a kproject module for korge
+Source:
+https://github.com/korlibs/korge-k3d/releases
