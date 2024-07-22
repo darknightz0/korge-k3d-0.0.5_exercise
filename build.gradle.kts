@@ -17,9 +17,7 @@ korge {
 // To selectively enable targets
 
     targetJvm()
-    targetJs()
     targetIos()
-    targetAndroidDirect()
     serializationJson()
 }
 
