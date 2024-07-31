@@ -1,20 +1,13 @@
+
 import korlibs.datastructure.*
-import korlibs.event.*
-import korlibs.image.bitmap.*
 import korlibs.image.color.*
-import korlibs.io.async.launchImmediately
-import korlibs.io.file.std.resourcesVfs
-import korlibs.korge.KeepOnReload
 import korlibs.korge.input.*
-import korlibs.korge.scene.Scene
-import korlibs.korge.tween.tween
+import korlibs.korge.scene.*
 import korlibs.korge.ui.*
 import korlibs.korge.view.*
 import korlibs.korge3d.*
-import korlibs.korge3d.format.gltf2.*
 import korlibs.korge3d.material.*
 import korlibs.korge3d.shape.*
-import korlibs.korge3d.util.*
 import korlibs.math.geom.*
 import korlibs.time.*
 
@@ -83,7 +76,7 @@ class PhysicsScene : Scene() {
 
         // @TODO: Use BVH3D
         var firstCollision = 0
-        addUpdater { dt ->
+        addUpdater {  dt ->
             scene3D.stage3D.foreachDescendant { view ->
                 val rigidBody = view.rigidBody
                 val collider = view.collider
