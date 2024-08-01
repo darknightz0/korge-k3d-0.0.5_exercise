@@ -1,8 +1,10 @@
 
+import korlibs.event.*
 import korlibs.image.color.*
 import korlibs.image.font.*
 import korlibs.io.file.std.*
 import korlibs.korge.*
+import korlibs.korge.input.*
 import korlibs.korge.scene.*
 import korlibs.korge.ui.*
 import korlibs.math.geom.*
@@ -20,15 +22,21 @@ suspend fun main() = Korge(
     backgroundColor = Colors["#3f3f3f"],
     quality = GameWindow.Quality.QUALITY,
     windowSize = Size2D(vw,vh),
-    virtualSize =Size2D(vw,vh)
+    virtualSize =Size2D(vw,vh),
+    fullscreen=false
 ) {
-    gameWindow.dectPos()
+    setting()
     myFont= TtfFont(resourcesVfs["txt_tp.ttf"].readAll())
     views.injector
         .mapPrototype { MainStage3d() }
         .mapPrototype { CastleScene() }
 
     sceneContainer().changeTo { MainStage3d() }
+    keys {
+        justDown(Key.ESCAPE) {
+            gameWindow.fullscreen=!gameWindow.fullscreen
+        }
+    }
 }
 
 

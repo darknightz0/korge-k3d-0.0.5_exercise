@@ -2,7 +2,6 @@
 
 import korlibs.datastructure.*
 import korlibs.event.*
-import korlibs.image.vector.*
 import korlibs.io.file.std.*
 import korlibs.korge.input.*
 import korlibs.korge.scene.*
@@ -12,7 +11,6 @@ import korlibs.korge3d.format.*
 import korlibs.korge3d.format.gltf2.*
 import korlibs.korge3d.shape.*
 import korlibs.math.geom.*
-import korlibs.render.*
 import korlibs.time.*
 import java.awt.*
 
@@ -29,8 +27,7 @@ class CastleScene:Scene() {
     val jf = 20f//彈跳力
     val gravity = Vector3.DOWN * 30f//加速度
     var dis = 20f//鏡頭對人物距離
-    val rb = Robot()
-    var mouseLock = false
+
     lateinit var chrac:GLTF2View
     lateinit var scene3D:Stage3DView
     lateinit var camera3D:Camera3D
@@ -54,7 +51,7 @@ class CastleScene:Scene() {
     }
     override suspend fun SContainer.sceneInit() {
         scene3D {
-            cursor = GameWindow.Cursor.DEFAULT
+
             val centerPointAxisLines = axisLines(length = 100f)
             centerPointAxisLines.position(0f,0f,0f)
             camera3D=camera.positionLookingAt(
@@ -72,7 +69,7 @@ class CastleScene:Scene() {
                 .name("player")
             addChild(chrac)
             cameraFix()
-
+           camera.speed=0.05f
         }
 
     }
@@ -84,13 +81,7 @@ class CastleScene:Scene() {
             justDown(Key.SHIFT) {
                 sp += 0.2f
             }
-            justDown(Key.R) {
-                println(cursor?.pos)
-            }
-            justDown(Key.Z) {
-                mouseLock = false
-                cursor = GameWindow.Cursor.DEFAULT
-            }
+
             justDown(Key.SPACE) {
                 chrac.rigidBody!!.velocity = Vector3.UP * jf
             }
@@ -129,14 +120,12 @@ class CastleScene:Scene() {
         }
         onClick {
             it.doubleClick {
-                mouseLock = !mouseLock
-                if (mouseLock) {
-                   cursor = GameWindow.CustomCursor(buildShape() {})
-
+                awtCursor.lock = !awtCursor.lock
+                if (awtCursor.lock) {
+                    awtWindow?.cursor=invisibleCursor
                 } else {
-                    cursor = GameWindow.Cursor.DEFAULT
+                    awtWindow?.cursor=Cursor.getDefaultCursor()
                 }
-
             }
         }
 
@@ -145,16 +134,16 @@ class CastleScene:Scene() {
         var pp=Vector3F.ZERO
         addUpdater {
                 time ->
-            if (mouseLock) {
-                degh += ((MouseInfo.getPointerInfo().location.x - gameWindow.posC.x) * cameraSpeed).degrees
-                degv += ((MouseInfo.getPointerInfo().location.y - gameWindow.posC.y) * cameraSpeed).degrees
+            if (awtCursor.lock) {
+                degh += ((awtCursor.dxy.x)*camera3D.speed).degrees
+                degv += ((awtCursor.dxy.y)*camera3D.speed).degrees
                 if (degv < 30.degrees) {
                     degv = 30.degrees
                 }
                 if (degv > 110.degrees) {
                     degv = 110.degrees
                 }
-                rb.mouseMove(gameWindow.posC.x.toInt(),gameWindow.posC.y.toInt())
+                awtCursor.dxy=Vector2D.ZERO
             }
              pp = (chrac.position + rigidBody!!.velocity * time.seconds)
             if (pp.y < 0) {
