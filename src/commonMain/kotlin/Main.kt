@@ -37,6 +37,7 @@ suspend fun main() = Korge(
             gameWindow.fullscreen=!gameWindow.fullscreen
         }
     }
+
 }
 
 
