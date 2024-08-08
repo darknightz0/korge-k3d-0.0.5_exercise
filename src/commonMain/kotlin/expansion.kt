@@ -32,12 +32,13 @@ var Camera3D.item: GLTF2View? by more(null)
 var Camera3D.moveSpeed: Float by more(0.3f)
 var Camera3D.rotateSpeed: Float by more(0.05f)
 
-var Camera3D.distance: Float by camera3DChange(20f,Pair(10f,30f))
+var Camera3D.distance: Float by camera3DChange(20f,Pair(0.1f,30f))
 var Camera3D.azimuth: Angle by camera3DChange(0.degrees)//鏡頭角度(水平)Z+看向Z-
-var Camera3D.elevation: Angle by camera3DChange(30.degrees,Pair(0.degrees,180.degrees))//鏡頭角度(垂直 俯角)0~180度 Y+看向Y-
+var Camera3D.elevation: Angle by camera3DChange(30.degrees,Pair(10.degrees,170.degrees))//鏡頭角度(垂直 俯角)0~180度 Y+看向Y-
 var Camera3D.target:Vector3F by camera3DChange(Vector3F.ZERO)
-var Camera3D.person: Int by personChange(2,Pair(1,4))
-
+var Camera3D.person: Int by camera3DChange(2,Pair(1,4))
+var Camera3D.view:Vector3F by more(Vector3F.ZERO)
+var Camera3D.eye:Vector3F by camera3DChange(Vector3F(1.3f, 3.2f,1.3f))
 var Stage3D.gravity:Vector3 by more(Vector3.DOWN * 30f)
 
 
@@ -87,32 +88,28 @@ class camera3DChange<T>(private var value: T,private val limit:Pair<T, T>?=null)
                     if (comparableValue < min!!)
                       this.value = min as T
            }
-
-           thisRef.orbitAround( thisRef.target, thisRef.distance, thisRef.azimuth, thisRef.elevation)
-        }
-    }
-}
-class personChange<T:Comparable<T>>(private var value: T,private val pair: Pair<T,T>) : ReadWriteProperty<Camera3D, T> {
-    private val max =pair.second
-    private val min =pair.first
-    override fun getValue(thisRef: Camera3D, property: KProperty<*>): T = value
-    override fun setValue(thisRef: Camera3D, property: KProperty<*>, value: T) {
-        if (this.value!=value){
-            this.value = value
-            if (value > max)
-                this.value = max
-            if (value < min)
-                this.value = min
             when(thisRef.person){
+                1->{
+                    val y=thisRef.distance*sinf(thisRef.elevation-90.degrees)
+                    val xz=thisRef.distance*cosf(thisRef.elevation-90.degrees)
+                    val z=xz*cosf(thisRef.azimuth+ 180.degrees)
+                    val x=xz*sinf(thisRef.azimuth+ 180.degrees)
+                    thisRef.view=thisRef.target+Vector3F(x+thisRef.eye.x* sinf(thisRef.azimuth+ 180.degrees),y+thisRef.eye.y,
+                        z+thisRef.eye.z* cosf(thisRef.azimuth+ 180.degrees))
+                    thisRef.item?.lookAt( thisRef.item!!.x-x,thisRef.item!!.y, thisRef.item!!.z-z)
+                    thisRef.orbitAround(thisRef.view, thisRef.distance, thisRef.azimuth, thisRef.elevation)
+                }
                 2->{
                     thisRef.target=thisRef.item?.position?:thisRef.target
+                    thisRef.orbitAround(thisRef.target, thisRef.distance, thisRef.azimuth, thisRef.elevation)
+                }
+                3->{
+                    thisRef.orbitAround(thisRef.target, thisRef.distance, thisRef.azimuth, thisRef.elevation)
                 }
             }
-            thisRef.orbitAround(thisRef.target, thisRef.distance, thisRef.azimuth, thisRef.elevation)
         }
     }
 }
-
 
 fun GameWindow.detectPos() {
     awtWindow=Frame.getFrames().find { it.isVisible }
@@ -154,25 +151,38 @@ class Move{
 
 fun Camera3D.move(theta: Angle) {
     // 平移點
-    val translatedX = this.x - this.target.x
-    val translatedZ = this.z - this.target.z
+    val translatedX :Float
+    val translatedZ :Float
+    if(this.person==1){
+        translatedX = this.view.x - this.target.x
+        translatedZ = this.view.z - this.target.z
+    }else{
+        translatedX = this.x - this.target.x
+        translatedZ = this.z - this.target.z
+    }
+
     // 應用旋轉矩陣
     val rotatedX = translatedX * cosf(theta) - translatedZ * sinf(theta)
     val rotatedZ = translatedX * sinf(theta) + translatedZ * cosf(theta)
     // 平移回原位置
     val z:Float
     val x:Float
+
     when(this.person){
         1->{
-
+            z=  this.moveSpeed * cosf(this.azimuth + 180.degrees - theta)
+            x=  this.moveSpeed * sinf(this.azimuth + 180.degrees - theta)
+            this.item?.updateAnimationDelta(this.item!!.animatedt)
+            this.item?.position=this.target+Vector3F(x,0f,z)
+            this.target+=Vector3F(x,0f,z)
         }
         2->{
             z= (this.item?.z?:this.target.z) + (this.item?.speed?:this.moveSpeed) * cosf(this.azimuth + 180.degrees - theta)
             x= (this.item?.x?:this.target.x) + (this.item?.speed?:this.moveSpeed) * sinf(this.azimuth + 180.degrees - theta)
             this.item?.lookAt(rotatedX + this.item!!.x, this.item!!.y, rotatedZ + this.item!!.z)
             this.item?.updateAnimationDelta(this.item!!.animatedt)
+            this.item?.position=Vector3F(x,this.target.y ,z)
             this.target=Vector3F(x,this.target.y ,z)
-            this.item?.position=this.target
         }
         3->{
             z= this.target.z + this.moveSpeed * cosf(this.azimuth + 180.degrees - theta)

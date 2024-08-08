@@ -50,6 +50,7 @@ class CastleScene:Scene() {
            camera.moveSpeed=0.3f
             chrac.speed=0.3f
             camera.item=chrac
+
         }
 
     }
@@ -61,8 +62,35 @@ class CastleScene:Scene() {
             justDown(Key.SHIFT) {
                 sp += 0.2f
             }
+            justDown(Key.U) {
+                println("az ${camera3D.azimuth}")
+            }
             justDown(Key.R) {
-
+                camera3D.eye+=Vector3F(0f,0f,0.1f)
+                println("+z ${camera3D.eye.z}")
+            }
+            justDown(Key.F) {
+                camera3D.eye+=Vector3F(0f,0f,-0.1f)
+                println("-z ${camera3D.eye.z}")
+            }
+            justDown(Key.T) {
+                camera3D.eye+=Vector3F(0f,0.1f,0f)
+                println("+y ${camera3D.eye.y}")
+            }
+            justDown(Key.G) {
+                camera3D.eye+=Vector3F(0f,-0.1f,0f)
+                println("-y ${camera3D.eye.y}")
+            }
+            justDown(Key.Y) {
+                camera3D.eye+=Vector3F(0.1f,0f,0f)
+                println("+x ${camera3D.eye.x}")
+            }
+            justDown(Key.H) {
+                camera3D.eye+=Vector3F(-0.1f,0f,0f)
+                println("-x ${camera3D.eye.x}")
+            }
+            justDown(Key.N1) {
+                camera3D.person=1
             }
             justDown(Key.N2) {
                 camera3D.person=2
@@ -119,9 +147,9 @@ class CastleScene:Scene() {
         addUpdater {
                 time ->
             if (awtCursor.lock) {
-                camera3D.azimuth += ((awtCursor.dxy.x)*camera3D.speed).degrees
-                camera3D.elevation += ((awtCursor.dxy.y)*camera3D.speed).degrees
-                awtCursor.dxy=Vector2D.ZERO
+                   camera3D.azimuth += ((awtCursor.dxy.x)*camera3D.rotateSpeed).degrees
+                   camera3D.elevation += ((awtCursor.dxy.y)*camera3D.rotateSpeed).degrees
+                   awtCursor.dxy=Vector2D.ZERO
             }
              pp = (chrac.position + rigidBody!!.velocity * time.seconds)
             if (pp.y < 0) {
